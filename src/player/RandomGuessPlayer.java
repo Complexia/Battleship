@@ -1,7 +1,7 @@
 package player;
 
 import java.util.Scanner;
-
+import java.util.*;
 import ship.AircraftCarrier;
 import ship.Cruiser;
 import ship.Frigate;
@@ -22,9 +22,21 @@ public class RandomGuessPlayer implements Player{
 	private int Submarine = 3;
 	private int Cruiser = 4;
 	private int PatrolCraft = 2;
+	
+	int shotsCounter = 0;
+	private int[][] allShots;
+	
     @Override
     public void initialisePlayer(World world) {
         this.world = world;
+        allShots = new int[world.numColumn][world.numRow];
+        for(int i=0;i<allShots.length;i++) {
+        	for(int j=0;j<allShots[i].length;j++) {
+        		
+        	}
+        }
+        
+        
     	
     } // end of initialisePlayer()
 
@@ -84,10 +96,64 @@ public class RandomGuessPlayer implements Player{
 
     @Override
     public Guess makeGuess() {
+    	shotsCounter = 0;
+        Guess guess = new Guess();
+    	for(int i=0;i<allShots.length;i++) {
+    		for(int j=0;j<allShots[i].length;j++) {
+    			if(allShots[i][j] == 0) {
+    				shotsCounter++;
+    			}
+    			
+    		}
+    	}
+    	Random r = new Random();
+    	int nextShot = 0;
+    	
+    	nextShot = r.nextInt(shotsCounter + 1);
+    	nextShot -=1;
+    	System.out.println(nextShot);
+    	if(nextShot < world.numColumn) {
+    		guess.column = world.numColumn - nextShot;
+    		guess.row = 1;
+    	}
+    	else {
+    		int division = nextShot/world.numColumn;
+    		int modulo = nextShot%world.numColumn;
+    		if(modulo == 0) {
+    			guess.column = world.numColumn;
+    			guess.row = division;
+    		}
+    		else {
+    			guess.column = modulo;
+    			guess.row = division + 1;
+    		}
+    	}
+    	boolean validHit = false;
+    	while(!validHit) {
+    		if(allShots[guess.column-1][guess.row-1] == 1) {
+    			if(guess.column < world.numColumn) {
+    				guess.column += 1;
+    			}
+    			else {
+    				guess.column = 1;
+    				if(guess.row < world.numRow) {
+    					guess.row +=1;
+    				}
+    				else {
+    					guess.column = 1;
+    					guess.row = 1;
+    				}
+    				
+    			}
+    		}
+    		else {
+    			validHit = true;
+    			break;
+    		}
+    	}
+    	allShots[guess.column-1][guess.row-1] = 1;
         
-
-        
-        return null;
+        return guess;
     } // end of makeGuess()
 
 
@@ -102,7 +168,7 @@ public class RandomGuessPlayer implements Player{
         // To be implemented.
 
         // dummy return
-        return true;
+        return false;
     } // end of noRemainingShips()
 
 } // end of class RandomGuessPlayer
