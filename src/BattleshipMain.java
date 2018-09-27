@@ -96,7 +96,10 @@ public class BattleshipMain {
                         usage(progName);
                     }
                 } catch (FileNotFoundException ex) {
+                	
                     System.err.println("ships location file not found.");
+                    ex.printStackTrace();
+                    
                     usage(progName);
                 }
 
