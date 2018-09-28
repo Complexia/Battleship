@@ -24,6 +24,7 @@ public class GreedyGuessPlayer  implements Player{
 	private int Cruiser = 4;
 	private int PatrolCraft = 2;
 	private int[] alreadyHit;
+	private cs[] seek;
 	
     @Override
     public void initialisePlayer(World world) {
@@ -170,7 +171,15 @@ public class GreedyGuessPlayer  implements Player{
 
     @Override
     public void update(Guess guess, Answer answer) {
-        
+        if(answer.isHit) {
+        	seek = new cs[4];
+        	seek[0] = new cs(guess.column, guess.row + 1);
+        	seek[1] = new cs(guess.column, guess.row - 1);
+        	seek[2] = new cs(guess.column + 1, guess.row);
+        	seek[3] = new cs(guess.column -1, guess.row);
+        	//enable target mode
+        }
+    	
     } // end of update()
 
 
@@ -184,4 +193,13 @@ public class GreedyGuessPlayer  implements Player{
         return false;
     } // end of noRemainingShips()
 
+    private class cs {
+    	int column;
+    	int row;
+		public cs(int column, int row) {
+			this.column = column;
+			this.row = row;
+		}
+    	
+    }
 } // end of class GreedyGuessPlayer
