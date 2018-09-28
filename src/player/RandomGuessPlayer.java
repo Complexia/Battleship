@@ -22,19 +22,16 @@ public class RandomGuessPlayer implements Player{
 	private int Submarine = 3;
 	private int Cruiser = 4;
 	private int PatrolCraft = 2;
+	private int[] alreadyHit;
 	
-	int shotsCounter = 0;
-	private int[][] allShots;
+	
 	
     @Override
     public void initialisePlayer(World world) {
         this.world = world;
-        allShots = new int[world.numColumn][world.numRow];
-        for(int i=0;i<allShots.length;i++) {
-        	for(int j=0;j<allShots[i].length;j++) {
-        		
-        	}
-        }
+        
+        
+        alreadyHit = new int[world.numColumn * world.numRow];
         
         
     	
@@ -53,18 +50,33 @@ public class RandomGuessPlayer implements Player{
                     switch (shipName) {
                         case "AircraftCarrier":
                             AircraftCarrier--;
+                            if(AircraftCarrier < 0) {
+                            	AircraftCarrier = 0;
+                            }
                             break;
                         case "Frigate":
                             Frigate--;
+                            if(Frigate < 0) {
+                            	Frigate = 0;
+                            }
                             break;
                         case "Submarine":
                             Submarine--;
+                            if(Submarine < 0) {
+                            	Submarine = 0;
+                            }
                             break;
                         case "Cruiser":
                             Cruiser--;
+                            if(Cruiser < 0) {
+                            	Cruiser = 0;
+                            }
                             break;
                         case "PatrolCraft":
                             PatrolCraft--;
+                            if(PatrolCraft < 0) {
+                            	PatrolCraft = 0;
+                            }
                             break;
                         
                     }
@@ -96,62 +108,47 @@ public class RandomGuessPlayer implements Player{
 
     @Override
     public Guess makeGuess() {
-    	shotsCounter = 0;
+    	
         Guess guess = new Guess();
-    	for(int i=0;i<allShots.length;i++) {
-    		for(int j=0;j<allShots[i].length;j++) {
-    			if(allShots[i][j] == 0) {
-    				shotsCounter++;
-    			}
-    			
-    		}
-    	}
+    	
     	Random r = new Random();
     	int nextShot = 0;
     	
-    	nextShot = r.nextInt(shotsCounter + 1);
-    	nextShot -=1;
-    	System.out.println(nextShot);
+    	boolean validHit = false;
+    	while(!validHit) {
+    		nextShot = r.nextInt(world.numColumn * world.numRow +1);
+        	
+        	if(nextShot != 0) {
+        		nextShot -=1;
+        	}
+        	if(alreadyHit[nextShot] == 0) {
+        		alreadyHit[nextShot] = 1;
+        		validHit = true;
+        		break;
+        	}
+    	}
+    	
+    	
+    	
+    	
     	if(nextShot < world.numColumn) {
-    		guess.column = world.numColumn - nextShot;
-    		guess.row = 1;
+    		guess.column = world.numColumn - (world.numColumn - nextShot);
+    		guess.row = 0;
     	}
     	else {
     		int division = nextShot/world.numColumn;
     		int modulo = nextShot%world.numColumn;
     		if(modulo == 0) {
-    			guess.column = world.numColumn;
+    			guess.column = 0;
     			guess.row = division;
     		}
     		else {
     			guess.column = modulo;
-    			guess.row = division + 1;
+    			guess.row = division;
     		}
     	}
-    	boolean validHit = false;
-    	while(!validHit) {
-    		if(allShots[guess.column-1][guess.row-1] == 1) {
-    			if(guess.column < world.numColumn) {
-    				guess.column += 1;
-    			}
-    			else {
-    				guess.column = 1;
-    				if(guess.row < world.numRow) {
-    					guess.row +=1;
-    				}
-    				else {
-    					guess.column = 1;
-    					guess.row = 1;
-    				}
-    				
-    			}
-    		}
-    		else {
-    			validHit = true;
-    			break;
-    		}
-    	}
-    	allShots[guess.column-1][guess.row-1] = 1;
+
+    	
         
         return guess;
     } // end of makeGuess()
@@ -165,9 +162,10 @@ public class RandomGuessPlayer implements Player{
 
     @Override
     public boolean noRemainingShips() {
-        // To be implemented.
-
-        // dummy return
+    	System.out.println(AircraftCarrier + " " + Frigate + " " + Submarine + " " + PatrolCraft + " " + Cruiser);
+        if(AircraftCarrier == 0 && Frigate == 0 && Submarine == 0 && PatrolCraft == 0 && Cruiser == 0) {
+        	return true;
+        }
         return false;
     } // end of noRemainingShips()
 
