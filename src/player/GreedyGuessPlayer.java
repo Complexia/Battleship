@@ -26,6 +26,7 @@ public class GreedyGuessPlayer  implements Player{
 	private int[] alreadyHit;
 	private int[] alreadyTar;
 	private cs[] seek;
+	
 	private boolean hunt;
 	private boolean target;
 	int nextShot = 0;
@@ -34,7 +35,10 @@ public class GreedyGuessPlayer  implements Player{
 	cs nextGuess;
 	int option = 0;
 	int checker = 0;
-	
+	int selection = 0;
+	int changer = 0;
+	String shipName = "";
+	int numHits = 0;
 	
     @Override
     public void initialisePlayer(World world) {
@@ -207,22 +211,26 @@ public class GreedyGuessPlayer  implements Player{
     			
 
         		int gridShot = nextGuess.row * world.numColumn + nextGuess.column;
-        		System.out.println("GRID " + gridShot);
+        		//System.out.println("GRID " + gridShot);
 //        		for(int j=0;j<alreadyTar.length;j++) {
 //        			System.out.println("Xz " + j + " " +  alreadyTar[j]);
 //        		}
-            	if(alreadyTar[gridShot] == 0) {
+        		Guess guess1 = new Guess();
+        		guess1.column = nextGuess.column;
+        		guess1.row = nextGuess.row;
+        		Answer answer1 = new Answer();
+        		answer1.isHit = false;
+        		if(gridShot < 0 || gridShot > 99) {
+        			update(guess1,answer1);
+        		}
+        		else if(alreadyTar[gridShot] == 0) {
             		alreadyTar[gridShot] = 1;
             		alreadyHit[gridShot] = 1;
             		validHit = true;
             		break;
             	}
             	else {
-            		Guess guess1 = new Guess();
-            		guess1.column = nextGuess.column;
-            		guess1.row = nextGuess.row;
-            		Answer answer1 = new Answer();
-            		answer1.isHit = false;
+            		
             		
             		update(guess1,answer1);
             	}
@@ -255,6 +263,8 @@ public class GreedyGuessPlayer  implements Player{
             	originalHit = new cs(guess.column,guess.row);
             	currentHit = new cs(guess.column,guess.row);
             	option = 0;
+            	selection = 0;
+            	changer = 0;
             	
             	
         	
@@ -263,135 +273,183 @@ public class GreedyGuessPlayer  implements Player{
         
     	if(target) {
     		if(answer.isHit) {
-    			
+    			numHits++;
     			if(answer.shipSunk != null) {
-    				System.out.println("YESYESYES");
-    				target = false;
-    				hunt = true;
-    				option = 0;
+    				System.out.println("shiplength " + answer.shipSunk.len());
+    				if(answer.shipSunk.len() * answer.shipSunk.width() < numHits) {
+    					numHits = numHits - answer.shipSunk.len() * answer.shipSunk.width();
+    					System.out.println("Keep targeting");
+    				}
+    				else {
+    					System.out.println("YESYESYES");
+        				target = false;
+        				hunt = true;
+        				option = 0;
+        				selection = 0;
+        				numHits = 0;
+    				}
+    				
+    				
     			}
+    			
     			if(option == 0) {
-    				if(currentHit.row + 1 >= world.numRow) {
-    					
+    				if(world.numRow - originalHit.row - 1 == 0) {
+    					option = 1;
     				}
     				else {
-    					nextGuess = new cs(currentHit.column,currentHit.row+1);
-        				currentHit = nextGuess;
+    					seek = new cs[world.numRow - originalHit.row-1];
+        				for(int i=0;i<seek.length;i++) {
+        					
+        					seek[i] = new cs(originalHit.column, originalHit.row +1 +  i);
+        				}
+        				if(selection > seek.length - 1) {
+        					selection = 0;
+        					option++;
+        				}
+        				else {
+        					nextGuess = seek[selection];
+            				selection++;
+        				}
     				}
+    					
     				
     			}
+    			
     			if(option == 1) {
-    				if(currentHit.row - 1 < 0) {
-    					
+    				if(originalHit.row == 0) {
+    					option = 2;
     				}
     				else {
-    					nextGuess = new cs(currentHit.column,currentHit.row-1);
-        				currentHit = nextGuess;
+    					seek = new cs[originalHit.row];
+        				for(int i=0;i<seek.length;i++) {
+        					
+        					seek[i] = new cs(originalHit.column, originalHit.row -1-i);
+        				}
+        				if(selection > seek.length - 1) {
+        					selection = 0;
+        					option++;
+        				}
+        				else {
+        					nextGuess = seek[selection];
+            				selection++;
+        				}
+        				
     				}
     				
     			}
+    			
     			if(option == 2) {
-    				if(currentHit.column + 1 >= world.numColumn) {
-    					
+    				if(world.numColumn - originalHit.column - 1 == 0) {
+    					option = 3;
     				}
     				else {
-    					nextGuess = new cs(currentHit.column+1,currentHit.row);
-        				currentHit = nextGuess;
+    					seek = new cs[world.numColumn - originalHit.column-1];
+        				for(int i=0;i<seek.length;i++) {
+        					
+        					seek[i] = new cs(originalHit.column + 1 + i, originalHit.row);
+        				}
+        				if(selection > seek.length - 1) {
+        					selection = 0;
+        					option++;
+        				}
+        				else {
+        					nextGuess = seek[selection];
+            				selection++;
+        				}
     				}
     				
     			}
+    			
     			if(option == 3) {
-    				if(currentHit.column - 1 < 0) {
-    					option = 0;
-    					nextGuess = new cs(currentHit.column,currentHit.row+1);
-        				currentHit = nextGuess;
+    				if(originalHit.column == 0) {
+    					answer.isHit = false;
+    				}
+    				seek = new cs[originalHit.column];
+    				for(int i=0;i<seek.length;i++) {
+    					
+    					seek[i] = new cs(originalHit.column - 1 - i, originalHit.row);
+    				}
+    				if(selection > seek.length - 1) {
+    					selection = 0;
+    					answer.isHit = false;
     				}
     				else {
-    					option = 0;
-    					nextGuess = new cs(currentHit.column-1,currentHit.row);
-        				currentHit= nextGuess;
+    					nextGuess = seek[selection];
+        				selection++;
     				}
-    				
     			}
+    			
+    			
+    			
+    			
+
             	
     			
         		
     			
     		}
-    		else {
+    		if(!answer.isHit) {
     			
-    			currentHit = originalHit;
+    			if(option == 0 && selection == 0 && changer > 0) {
+    				option = 4;
+    			}
+    			answer.isHit = true;
+    			
+    			selection = 0;
     			option++;
+    			numHits--;
+    			update(guess,answer);
     			
-    			if(option == 0) {
-    				if(originalHit.row + 1 >= world.numRow) {
-    					option++;
-    				}
-    				else {
-    					nextGuess = new cs(originalHit.column,originalHit.row+1);
-        				currentHit = nextGuess;
-    				}
-    				
-    			}
-    			if(option == 1) {
-    				if(originalHit.row - 1 < 0) {
-    					option++;
-    				}
-    				else {
-    					nextGuess = new cs(originalHit.column,originalHit.row-1);
-        				currentHit = nextGuess;
-    				}
-    				
-    			}
-    			if(option == 2) {
-    				if(originalHit.column + 1 >= world.numColumn) {
-    					option++;
-    				}
-    				else {
-    					nextGuess = new cs(originalHit.column+1,originalHit.row);
-        				currentHit = nextGuess;
-    				}
-    				
-    			}
-    			if(option == 3) {
-    				System.out.println("Here");
-    				if(originalHit.column - 1 < 0) {
+    			if(option > 3) {
+    				if(changer == 0) {
+    					originalHit = new cs(currentHit.column -1, currentHit.row - 1);
     					
-    					nextGuess = new cs(currentHit.column,currentHit.row+1);
-        				currentHit = nextGuess;
+        				changer = 1;
+        				
     				}
-    				else {
-    					nextGuess = new cs(originalHit.column-1,originalHit.row);
-        				currentHit = nextGuess;
+    				else if(changer == 1) {
+    					
+    					originalHit = new cs(currentHit.column +1, currentHit.row - 1);
+    					
+    					changer = 2;
+    					
     				}
-    				
-    			}
-    			
-    			
-    			if(option >= 4) {
-    				
-    				
-    				
-    				
-    				if(checker == 0) {
-    					checker = 1;
+    				else if(changer == 2) {
+    					
+    					originalHit = new cs(currentHit.column -1, currentHit.row + 1);
+    					
+    					changer = 3;
+    					
     				}
-    				else {
-    					if(nextGuess.column > originalHit.column && originalHit.column -1 >= 0) {
-        					originalHit.column -=1;
-        					nextGuess = originalHit;
-        				}
-        				else if(nextGuess.column < originalHit.column && originalHit.column +1 < world.numColumn) {
-        					originalHit.column +=1;
-        					nextGuess = originalHit;
-        				}
-    					checker = 0;
+    				else if(changer == 3) {
+    					originalHit = new cs(currentHit.column +1, currentHit.row + 1);
+    					changer = 4;
     				}
     				
     				
+    				
+    				else if(changer > 3) {
+    					int something = nextShot + 9;
+    					if(something > 99) {
+    						something = nextShot - 9;
+    					}
+    					int column = something % world.numColumn;
+    					int row = something / world.numRow;
+    					currentHit = new cs(column,row);
+    					changer = 0;
+    					originalHit = currentHit;
+    					
+    					System.out.println("changer overextended");
+    				}
     				option = 0;
     				
+    				nextGuess = originalHit;
+    				
+    				
     			}
+    			
+    			
+
     			
     			
             		
