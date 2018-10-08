@@ -17,7 +17,7 @@ import world.World;
  */
 public class RandomGuessPlayer implements Player{
 	World world;
-	private int AircraftCarrier = 5;
+	private int AircraftCarrier = 6;
 	private int Frigate = 4;
 	private int Submarine = 3;
 	private int Cruiser = 4;
@@ -50,8 +50,13 @@ public class RandomGuessPlayer implements Player{
                     switch (shipName) {
                         case "AircraftCarrier":
                             AircraftCarrier--;
+                            
                             if(AircraftCarrier < 0) {
                             	AircraftCarrier = 0;
+                            	
+                            }
+                            if(AircraftCarrier == 0) {
+                            	answer.shipSunk = new AircraftCarrier();
                             }
                             break;
                         case "Frigate":
@@ -59,11 +64,17 @@ public class RandomGuessPlayer implements Player{
                             if(Frigate < 0) {
                             	Frigate = 0;
                             }
+                            if(Frigate == 0) {
+                            	answer.shipSunk = new Frigate();
+                            }
                             break;
                         case "Submarine":
                             Submarine--;
                             if(Submarine < 0) {
                             	Submarine = 0;
+                            }
+                            if(Submarine == 0) {
+                            	answer.shipSunk = new Submarine();
                             }
                             break;
                         case "Cruiser":
@@ -71,32 +82,38 @@ public class RandomGuessPlayer implements Player{
                             if(Cruiser < 0) {
                             	Cruiser = 0;
                             }
+                            if(Cruiser == 0) {
+                            	answer.shipSunk = new Cruiser();
+                            }
                             break;
                         case "PatrolCraft":
                             PatrolCraft--;
                             if(PatrolCraft < 0) {
                             	PatrolCraft = 0;
                             }
+                            if(PatrolCraft == 0) {
+                            	answer.shipSunk = new PatrolCraft();
+                            }
                             break;
                         
                     }
         			
         		}
-    			if(AircraftCarrier == 0) {
-    				answer.shipSunk = new AircraftCarrier();
-    			}
-    			if(Frigate == 0) {
-    				answer.shipSunk = new Frigate();
-    			}
-    			if(Submarine == 0) {
-    				answer.shipSunk = new Submarine();
-    			}
-    			if(Cruiser == 0) {
-    				answer.shipSunk = new Cruiser();
-    			}
-    			if(PatrolCraft == 0) {
-    				answer.shipSunk = new PatrolCraft();
-    			}
+//    			if(AircraftCarrier == 0) {
+//    				answer.shipSunk = new AircraftCarrier();
+//    			}
+//    			if(Frigate == 0) {
+//    				answer.shipSunk = new Frigate();
+//    			}
+//    			if(Submarine == 0) {
+//    				answer.shipSunk = new Submarine();
+//    			}
+//    			if(Cruiser == 0) {
+//    				answer.shipSunk = new Cruiser();
+//    			} 	
+//    			if(PatrolCraft == 0) {
+//    				answer.shipSunk = new PatrolCraft();
+//    			}
     		}
     		
     	}
@@ -162,7 +179,7 @@ public class RandomGuessPlayer implements Player{
 
     @Override
     public boolean noRemainingShips() {
-    	System.out.println(AircraftCarrier + " " + Frigate + " " + Submarine + " " + PatrolCraft + " " + Cruiser);
+    	//System.out.println(AircraftCarrier + " " + Frigate + " " + Submarine + " " + PatrolCraft + " " + Cruiser);
         if(AircraftCarrier == 0 && Frigate == 0 && Submarine == 0 && PatrolCraft == 0 && Cruiser == 0) {
         	return true;
         }
