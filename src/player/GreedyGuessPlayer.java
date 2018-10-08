@@ -39,6 +39,7 @@ public class GreedyGuessPlayer  implements Player{
 	int changer = 0;
 	String shipName = "";
 	int numHits = 0;
+	int infiniteCounter = 0;
 	
     @Override
     public void initialisePlayer(World world) {
@@ -429,15 +430,18 @@ public class GreedyGuessPlayer  implements Player{
     				
     				
     				else if(changer > 3) {
-    					int something = nextShot + 9;
+    					int something = nextShot + 9 + infiniteCounter;
     					if(something > 99) {
-    						something = nextShot - 9;
+    						something = nextShot - 9 + infiniteCounter;
     					}
     					int column = something % world.numColumn;
     					int row = something / world.numRow;
     					currentHit = new cs(column,row);
     					changer = 0;
     					originalHit = currentHit;
+    					
+    					infiniteCounter++;
+    					
     					
     					System.out.println("changer overextended");
     				}
