@@ -45,6 +45,7 @@ public class ProbabilisticGuessPlayer  implements Player{
 	cs originalHit;
 	cs currentHit;
 	cs nextGuess;
+	int nextGuess1;
 	int option = 0;
 	int checker = 0;
 	int selection = 0;
@@ -54,6 +55,7 @@ public class ProbabilisticGuessPlayer  implements Player{
 	int infiniteCounter = 0;
 	int cruiserLength = 2;
 	int aircraftLength = 3;
+	int cheeker = 0;
 	
 
     @Override
@@ -414,9 +416,53 @@ public class ProbabilisticGuessPlayer  implements Player{
     		if(selection == 0) {
     			selection = 1;
     		}
+    		
     		guess.column = seek[selection-1].column;
     		guess.row = seek[selection-1].row;
     		nextShot = guess.row * world.numRow + guess.column;
+    		while(totalCount[nextShot] == 0) {
+    			System.out.println(nextShot + " " + cheeker + " " + changer);
+    			Guess guess1 = guess;
+    			Answer answer = new Answer();
+    			answer.isHit = false;
+    			update(guess1,answer);
+    			if(cheeker  == 1) {
+    				break;
+    			}
+    			
+    		}
+    		
+    		if(cheeker == 1) {
+    			while(totalCount[nextGuess1] == 0) {
+    				
+    				Guess guess1 = guess;
+    				Answer answer = new Answer();
+        			answer.isHit = false;
+        			update(guess1,answer);
+        			
+        			
+        		}
+    			int division = nextGuess1/world.numColumn;
+        		int modulo = nextGuess1%world.numColumn;
+        		if(modulo == 0) {
+        			guess.column = 0;
+        			guess.row = division;
+        		}
+        		else {
+        			guess.column = modulo;
+        			guess.row = division;
+        		}
+        		changer = 0;
+        		cheeker = 0;
+        		hunt = true;
+        		Guess guess1 = guess;
+    			Answer answer = new Answer();
+        		answer.isHit = true;;
+    			update(guess1,answer);
+    			hunt = false;
+        		System.out.println("HERE?" + " " + nextGuess1);
+    		}
+    		
     	}
     	return guess;
     } // end of makeGuess()
@@ -427,7 +473,7 @@ public class ProbabilisticGuessPlayer  implements Player{
     	totalCount[nextShot] = 0;
         if(hunt) {
         	if(answer.isHit) {
-        		System.out.println("HERE?");
+        		
             	target = true;
             	hunt = false;
             	originalHit = new cs(guess.column,guess.row);
@@ -530,6 +576,50 @@ public class ProbabilisticGuessPlayer  implements Player{
         	
         	}
         	else {
+        		if(changer > 3) {
+        			System.out.println("And here?");
+        			cheeker = 1;
+        			int s1 = (currentHit.row - 1) * world.numRow + (currentHit.column - 1);
+        			int s2 = (currentHit.row + 1) * world.numRow + (currentHit.column - 1);
+        			int s3 = (currentHit.row - 1) * world.numRow + (currentHit.column + 1);
+        			int s4 = (currentHit.row + 1) * world.numRow + (currentHit.column + 1);
+        			
+        			int order[] = new int[4];
+            		order[0] = totalCount[s1];
+            		order[1] = totalCount[s2];
+            		order[2] = totalCount[s3];
+            		order[3] = totalCount[s4];
+            		
+            		int m = 0;
+            		for(int i = 0;i<order.length;i++) {
+            			if(order[i] > m) {
+            				m = order[i];
+            			}
+            		}
+            		
+            		ArrayList<Integer> nextShots = new ArrayList<Integer>();
+            		for(int i=0;i<order.length;i++) {
+            			if(order[i] == m) {
+            				nextShots.add(i);
+            			}
+            		}
+            		int nextIndex = nextShots.get(r.nextInt(nextShots.size()));
+            		if(nextIndex == 0) {
+            			nextGuess1 = s1;
+            		}
+            		if(nextIndex == 1) {
+            			nextGuess1 = s2;
+            		}
+            		if(nextIndex == 2) {
+            			nextGuess1 = s3;
+            		}
+            		if(nextIndex == 3) {
+            			nextGuess1 = s4;
+            		}
+            		
+            		
+        		}
+        		currentHit = originalHit;
         		int s1 = seek1[0].row * world.numRow + seek1[0].column;
         		int s2 = seek2[0].row * world.numRow + seek2[0].column;
         		int s3 = seek3[0].row * world.numRow + seek3[0].column;
@@ -568,6 +658,7 @@ public class ProbabilisticGuessPlayer  implements Player{
         		}
         		
         		selection = 0;
+        		changer++;
         		
         	}
         	
