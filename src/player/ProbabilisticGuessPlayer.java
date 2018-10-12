@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.Scanner;
 
-
 import ship.AircraftCarrier;
 import ship.Cruiser;
 import ship.Frigate;
@@ -56,6 +55,7 @@ public class ProbabilisticGuessPlayer  implements Player{
 	int cruiserLength = 2;
 	int aircraftLength = 3;
 	int cheeker = 0;
+	int gridShot = 0;
 	
 
     @Override
@@ -257,9 +257,7 @@ public class ProbabilisticGuessPlayer  implements Player{
     			}
     			else {
     				k--;
-    			}
-    			
-    			
+    			}			
     		}
     		if(i == 0) {
     			aircraftCount[j + i] = +  2 + k;
@@ -393,7 +391,15 @@ public class ProbabilisticGuessPlayer  implements Player{
     			}
     		}
     		nextShot = nextShots.get(r.nextInt(nextShots.size()));
-    		System.out.println("Stuck in hunt?");
+    		
+    		while(totalCount[nextShot] <= 0) {
+    			for(int i=0;i<totalCount.length;i++) {
+        			if(totalCount[i] == m) {
+        				nextShots.add(i);
+        			}
+        		}
+    			nextShot = nextShots.get(r.nextInt(nextShots.size()));
+    		}
     		
     		if(nextShot < world.numColumn) {
         		guess.column = world.numColumn - (world.numColumn - nextShot);
@@ -411,58 +417,41 @@ public class ProbabilisticGuessPlayer  implements Player{
         			guess.row = division;
         		}
         	}
+    		
     	}
     	else { //target
-    		if(selection == 0) {
-    			selection = 1;
-    		}
-    		
-    		guess.column = seek[selection-1].column;
-    		guess.row = seek[selection-1].row;
-    		nextShot = guess.row * world.numRow + guess.column;
-    		while(totalCount[nextShot] == 0) {
-    			System.out.println(nextShot + " " + cheeker + " " + changer);
-    			Guess guess1 = guess;
-    			Answer answer = new Answer();
-    			answer.isHit = false;
-    			update(guess1,answer);
-    			if(cheeker  == 1) {
-    				break;
-    			}
+
+    		gridShot = nextGuess.row * world.numColumn + nextGuess.column;
+    		guess.column = nextGuess.column;
+    		guess.row = nextGuess.row;
+    		while(totalCount[gridShot] <= 0) {
+    			System.out.println("What?");
     			
-    		}
+    			
+    			gridShot = nextGuess.row * world.numColumn + nextGuess.column; 
+
+        		Guess guess1 = new Guess();
+        		guess1.column = nextGuess.column;
+        		guess1.row = nextGuess.row;
+        		Answer answer1 = new Answer();
+        		answer1.isHit = false;
+        		if(gridShot < 0 || gridShot > 99) {
+        			update(guess1,answer1);
+        		}
+        		else if(totalCount[gridShot] <= 0) {
+        			System.out.println(gridShot + " " + totalCount[gridShot]);
+        			update(guess1,answer1);
+        		}
+            	
+	    		guess.column = nextGuess.column;
+	    		guess.row = nextGuess.row;
+	    		
     		
-    		if(cheeker == 1) {
-    			while(totalCount[nextGuess1] == 0) {
-    				
-    				Guess guess1 = guess;
-    				Answer answer = new Answer();
-        			answer.isHit = false;
-        			update(guess1,answer);
-        			
-        			
-        		}
-    			int division = nextGuess1/world.numColumn;
-        		int modulo = nextGuess1%world.numColumn;
-        		if(modulo == 0) {
-        			guess.column = 0;
-        			guess.row = division;
-        		}
-        		else {
-        			guess.column = modulo;
-        			guess.row = division;
-        		}
-        		changer = 0;
-        		cheeker = 0;
-        		hunt = true;
-        		Guess guess1 = guess;
-    			Answer answer = new Answer();
-        		answer.isHit = true;;
-    			update(guess1,answer);
-    			hunt = false;
-        		System.out.println("HERE?" + " " + nextGuess1);
-    		}
-    		
+    	}
+    	
+
+    	
+        
     	}
     	return guess;
     } // end of makeGuess()
@@ -470,90 +459,261 @@ public class ProbabilisticGuessPlayer  implements Player{
 
     @Override
     public void update(Guess guess, Answer answer) {
+    	//Setting the coordinate probability count to zero
     	totalCount[nextShot] = 0;
-        if(hunt) {
-        	if(answer.isHit) {
+    	//recalculating probable hits for Frigate
+    	for(int i=0;i<totalCount.length;i++) {
+    		if(totalCount[i] > 0) {
+    			int division = nextShot/world.numColumn;
+        		int modulo =nextShot%world.numColumn;
+        		int divisionI = i/world.numColumn;
+        		int moduloI =i%world.numColumn;
+        		int xax =(modulo - moduloI); //xax is the distance along the x axis
+        		if(xax < 0) {
+        			xax = xax * -1;
+        		}
+        		int yax = (division - divisionI); //yax is the distance along the y axis
+        		if(yax < 0) {
+        			yax = yax * -1;
+        		}
         		
+        		if(xax < Frigate && division == divisionI) {
+        			xax--;
+        			totalCount[i] = totalCount[i] - xax;
+     
+        		}
+        		if(yax < Frigate && modulo == moduloI) {
+        			yax--;
+        			totalCount[i] = totalCount[i] - yax;
+        		}
+        		if(totalCount[i] < 0) {
+        			totalCount[i] = 0;
+        		}
+    		}
+    		
+    		
+    	}
+    	//Recalculating hits for PatrolCraft
+    	for(int i=0;i<totalCount.length;i++) {
+    		if(totalCount[i] > 0) {
+    			int division = nextShot/world.numColumn;
+        		int modulo =nextShot%world.numColumn;
+        		if(nextShot < world.numColumn) {
+        			modulo = nextShot;
+        		}
+        		
+        		int divisionI = i/world.numColumn;
+        		int moduloI =i%world.numColumn;
+        		if(i < world.numColumn) {
+        			modulo = nextShot;
+        		}
+        		int xax =(modulo - moduloI);
+        		if(xax < 0) {
+        			xax = xax * -1;
+        		}
+        		int yax = (division - divisionI);
+        		if(yax < 0) {
+        			yax = yax * -1;
+        		
+        		}
+        		
+        		int hax = totalCount[i];
+        		if(xax < PatrolCraft && division == divisionI) {
+        			xax--;
+        			totalCount[i] = totalCount[i] - xax;
+        		}
+        		if(yax < PatrolCraft && modulo == moduloI) {
+        			yax--;
+        			totalCount[i] = totalCount[i] - yax;
+        		}
+        		if(totalCount[i] < 0) {
+        			totalCount[i] = 0;
+        		}
+    		}
+    		
+   	
+    	}
+    	//Recalculating hits for Submarine
+    	for(int i=0;i<totalCount.length;i++) {
+    		if(totalCount[i] > 0) {
+    			int division = nextShot/world.numColumn;
+        		int modulo =nextShot%world.numColumn;
+        		if(nextShot < world.numColumn) {
+        			modulo = nextShot;
+        		}
+        		
+        		int divisionI = i/world.numColumn;
+        		int moduloI =i%world.numColumn;
+        		if(i < world.numColumn) {
+        			modulo = nextShot;
+        		}
+        		int xax =(modulo - moduloI);
+        		if(xax < 0) {
+        			xax = xax * -1;
+        		}
+        		int yax = (division - divisionI);
+        		if(yax < 0) {
+        			yax = yax * -1;
+        		
+        		}
+        		
+        		int hax = totalCount[i];
+        		if(xax < Submarine && division == divisionI) {
+        			xax--;
+        			totalCount[i] = totalCount[i] - xax;
+        		}
+        		if(yax < Submarine && modulo == moduloI) {
+        			yax--;
+        			totalCount[i] = totalCount[i] - yax;
+        		}
+        		if(totalCount[i] < 0) {
+        			totalCount[i] = 0;
+        		}
+       	
+    		}
+    		
+    	}
+    	
+    	//Recalculating hits for AircraftCarrier
+    	for(int i=0;i<totalCount.length;i++) {
+    		if(totalCount[i] > 0) {
+    			int division = nextShot/world.numColumn;
+        		int modulo =nextShot%world.numColumn;
+        		if(nextShot < world.numColumn) {
+        			modulo = nextShot;
+        		}
+        		
+        		int divisionI = i/world.numColumn;
+        		int moduloI =i%world.numColumn;
+        		if(i < world.numColumn) {
+        			modulo = nextShot;
+        		}
+        		int xax =(modulo - moduloI);
+        		if(xax < 0) {
+        			xax = xax * -1;
+        		}
+        		int yax = (division - divisionI);
+        		if(yax < 0) {
+        			yax = yax * -1;
+        		
+        		}
+        		
+        		int hax = totalCount[i];
+        		if(xax < aircraftLength && division == divisionI) {
+        			xax--;
+        			totalCount[i] = totalCount[i] - xax;
+        		}
+        		if(yax < aircraftLength && modulo == moduloI) {
+        			yax--;
+        			totalCount[i] = totalCount[i] - yax;
+        		}
+        		if(totalCount[i] < 0) {
+        			totalCount[i] = 0;
+        		}
+    		}
+    		
+   	
+    	}
+    	
+    	//Recalculating hits for Cruiser
+    	for(int i=0;i<totalCount.length;i++) {
+    		if(totalCount[i] > 0) {
+    			int division = nextShot/world.numColumn;
+        		int modulo =nextShot%world.numColumn;
+        		if(nextShot < world.numColumn) {
+        			modulo = nextShot;
+        		}
+        		
+        		int divisionI = i/world.numColumn;
+        		int moduloI =i%world.numColumn;
+        		if(i < world.numColumn) {
+        			modulo = nextShot;
+        		}
+        		int xax =(modulo - moduloI); //xax is the distance along the x axis (column)
+        		if(xax < 0) {
+        			xax = xax * -1;
+        		}
+        		int yax = (division - divisionI); //yax is the distance along the y axis
+        		if(yax < 0) {
+        			yax = yax * -1;
+        			
+        		
+        		}
+        		
+        		int hax = totalCount[i];
+        		if(xax < cruiserLength && division == divisionI) { 
+        			xax--;
+        			totalCount[i] = totalCount[i] - xax;
+        		}
+        		if(yax < cruiserLength && modulo == moduloI) {
+        			yax--;
+        			totalCount[i] = totalCount[i] - yax;
+        		}
+        		if(totalCount[i] < 0) {
+        			totalCount[i] = 0;
+        		}
+    		}
+    		
+   	
+    	}
+        if(hunt) {// hunt mode
+        	if(answer.isHit) {
+        		hunt = false;
             	target = true;
-            	hunt = false;
-            	originalHit = new cs(guess.column,guess.row);
-            	currentHit = new cs(guess.column,guess.row);
+            	originalHit = new cs(guess.column,guess.row); //The hit that was originally 
+            	currentHit = new cs(guess.column,guess.row);  
             	option = 0;
             	selection = 0;
             	changer = 0;
-            	
-            	seek1 = new cs[world.numRow - originalHit.row-1];
-				for(int i=0;i<seek1.length;i++) {
-					
-					seek1[i] = new cs(originalHit.column, originalHit.row +1 +  i);
-				}
-				seek2 = new cs[originalHit.row];
-				for(int i=0;i<seek2.length;i++) {
-					
-					seek2[i] = new cs(originalHit.column, originalHit.row -1 -  i);
-				}
-				seek3 = new cs[world.numColumn - originalHit.column-1];
-				for(int i=0;i<seek3.length;i++) {
-					
-					seek3[i] = new cs(originalHit.column + 1 + i, originalHit.row);
-				}
-				seek4 = new cs[originalHit.column];
-				for(int i=0;i<seek4.length;i++) {
-					
-					seek4[i] = new cs(originalHit.column - 1 - i, originalHit.row);
-				}
-				
-				int s1 = seek1[0].row * world.numRow + seek1[0].column;
-        		int s2 = seek2[0].row * world.numRow + seek2[0].column;
-        		int s3 = seek3[0].row * world.numRow + seek3[0].column;
-        		int s4 = seek4[0].row * world.numRow + seek4[0].column;
-        		int order[] = new int[4];
-        		order[0] = totalCount[s1];
-        		order[1] = totalCount[s2];
-        		order[2] = totalCount[s3];
-        		order[3] = totalCount[s4];
-        		
-        		int m = 0;
-        		for(int i = 0;i<order.length;i++) {
-        			if(order[i] > m) {
-        				m = order[i];
-        			}
-        		}
-        		
-        		ArrayList<Integer> nextShots = new ArrayList<Integer>();
-        		for(int i=0;i<order.length;i++) {
-        			if(order[i] == m) {
-        				nextShots.add(i);
-        			}
-        		}
-        		int nextIndex = nextShots.get(r.nextInt(nextShots.size()));
-        		if(nextIndex == 0) {
-        			seek = seek1;
-        		}
-        		if(nextIndex == 1) {
-        			seek = seek2;
-        		}
-        		if(nextIndex == 2) {
-        			seek = seek3;
-        		}
-        		if(nextIndex == 3) {
-        			seek = seek4;
-        		}
-        		
-				
         	}
+        	
         }
-        if(target) {
+        if(target) { // target mode 
+        	
+        	totalCount[gridShot] = 0;
         	if(answer.isHit) {
-        		numHits++;
+    			numHits++;
     			if(answer.shipSunk != null) {
-    				
+    				System.out.println("shiplength " + answer.shipSunk.len());
+    				//this is commented out because it doesn't work properly, but the idea is there
+    				//recalculating Total
+//    		    	if(answer.shipSunk.name().equalsIgnoreCase("Frigate")) {
+//    		    		for(int i=0;i<totalCount.length;i++) {
+//        		    		totalCount[i] = totalCount[i] - frigateCount[i];
+//        		    		
+//        		    	}
+//    		    	}
+//    		    	if(answer.shipSunk.name().equalsIgnoreCase("Submarine")) {
+//    		    		for(int i=0;i<totalCount.length;i++) {
+//        		    		totalCount[i] = totalCount[i] - submarineCount[i];
+//        		    		
+//        		    	}
+//    		    	}
+//    		    	if(answer.shipSunk.name().equalsIgnoreCase("PatrolCraft")) {
+//    		    		for(int i=0;i<totalCount.length;i++) {
+//        		    		totalCount[i] = totalCount[i] - patrolCraftCount[i];
+//        		    		
+//        		    	}
+//    		    	}
+//    		    	if(answer.shipSunk.name().equalsIgnoreCase("Cruiser")) {
+//    		    		for(int i=0;i<totalCount.length;i++) {
+//        		    		totalCount[i] = totalCount[i] - cruiserCount[i];
+//        		    		
+//        		    	}
+//    		    	}
+//    		    	if(answer.shipSunk.name().equalsIgnoreCase("AircraftCarrier")) {
+//    		    		for(int i=0;i<totalCount.length;i++) {
+//        		    		totalCount[i] = totalCount[i] - aircraftCount[i];
+//        		    		
+//        		    	}
+//    		    	}
+//    		    	
     				if(answer.shipSunk.len() * answer.shipSunk.width() < numHits) {
     					numHits = numHits - answer.shipSunk.len() * answer.shipSunk.width();
     					System.out.println("Keep targeting");
     				}
     				else {
-    					System.out.println("ProbYESYESYES");
+    					System.out.println("YESYESYES");
         				target = false;
         				hunt = true;
         				option = 0;
@@ -564,103 +724,173 @@ public class ProbabilisticGuessPlayer  implements Player{
     				
     			}
     			
-    			
-        		
-    			
-    			
-				if(selection <= seek.length) {
-					selection++;
-				}
+    			if(option == 0) {
+    				if(world.numRow - originalHit.row - 1 == 0) {
+    					option = 1;
+    				}
+    				else {
+    					seek = new cs[world.numRow - originalHit.row-1];
+        				for(int i=0;i<seek.length;i++) {
+        					
+        					seek[i] = new cs(originalHit.column, originalHit.row +1 +  i);
+        				}
+        				if(selection > seek.length - 1) {
+        					selection = 0;
+        					option++;
+        				}
+        				else {
+        					nextGuess = seek[selection];
+            				selection++;
+        				}
+    				}
+    					
     				
+    			}
     			
-        	
-        	}
-        	else {
-        		if(changer > 3) {
-        			System.out.println("And here?");
-        			cheeker = 1;
-        			int s1 = (currentHit.row - 1) * world.numRow + (currentHit.column - 1);
-        			int s2 = (currentHit.row + 1) * world.numRow + (currentHit.column - 1);
-        			int s3 = (currentHit.row - 1) * world.numRow + (currentHit.column + 1);
-        			int s4 = (currentHit.row + 1) * world.numRow + (currentHit.column + 1);
-        			
-        			int order[] = new int[4];
-            		order[0] = totalCount[s1];
-            		order[1] = totalCount[s2];
-            		order[2] = totalCount[s3];
-            		order[3] = totalCount[s4];
-            		
-            		int m = 0;
-            		for(int i = 0;i<order.length;i++) {
-            			if(order[i] > m) {
-            				m = order[i];
-            			}
-            		}
-            		
-            		ArrayList<Integer> nextShots = new ArrayList<Integer>();
-            		for(int i=0;i<order.length;i++) {
-            			if(order[i] == m) {
-            				nextShots.add(i);
-            			}
-            		}
-            		int nextIndex = nextShots.get(r.nextInt(nextShots.size()));
-            		if(nextIndex == 0) {
-            			nextGuess1 = s1;
-            		}
-            		if(nextIndex == 1) {
-            			nextGuess1 = s2;
-            		}
-            		if(nextIndex == 2) {
-            			nextGuess1 = s3;
-            		}
-            		if(nextIndex == 3) {
-            			nextGuess1 = s4;
-            		}
-            		
-            		
-        		}
-        		currentHit = originalHit;
-        		int s1 = seek1[0].row * world.numRow + seek1[0].column;
-        		int s2 = seek2[0].row * world.numRow + seek2[0].column;
-        		int s3 = seek3[0].row * world.numRow + seek3[0].column;
-        		int s4 = seek4[0].row * world.numRow + seek4[0].column;
-        		int order[] = new int[4];
-        		order[0] = totalCount[s1];
-        		order[1] = totalCount[s2];
-        		order[2] = totalCount[s3];
-        		order[3] = totalCount[s4];
+    			if(option == 1) {
+    				if(originalHit.row == 0) {
+    					option = 2;
+    				}
+    				else {
+    					seek = new cs[originalHit.row];
+        				for(int i=0;i<seek.length;i++) {
+        					
+        					seek[i] = new cs(originalHit.column, originalHit.row -1-i);
+        				}
+        				if(selection > seek.length - 1) {
+        					selection = 0;
+        					option++;
+        				}
+        				else {
+        					nextGuess = seek[selection];
+            				selection++;
+        				}
+        				
+    				}
+    				
+    			}
+    			
+    			if(option == 2) {
+    				if(world.numColumn - originalHit.column - 1 == 0) {
+    					option = 3;
+    				}
+    				else {
+    					seek = new cs[world.numColumn - originalHit.column-1];
+        				for(int i=0;i<seek.length;i++) {
+        					
+        					seek[i] = new cs(originalHit.column + 1 + i, originalHit.row);
+        				}
+        				if(selection > seek.length - 1) {
+        					selection = 0;
+        					option++;
+        				}
+        				else {
+        					nextGuess = seek[selection];
+            				selection++;
+        				}
+    				}
+    				
+    			}
+    			
+    			if(option == 3) {
+    				if(originalHit.column == 0) {
+    					answer.isHit = false;
+    				}
+    				seek = new cs[originalHit.column];
+    				for(int i=0;i<seek.length;i++) {
+    					
+    					seek[i] = new cs(originalHit.column - 1 - i, originalHit.row);
+    				}
+    				if(selection > seek.length - 1) {
+    					selection = 0;
+    					answer.isHit = false;
+    				}
+    				else {
+    					nextGuess = seek[selection];
+        				selection++;
+    				}
+    			}
+    			
+    			
+    			
+    			
+
+            	
+    			
         		
-        		int m = 0;
-        		for(int i = 0;i<order.length;i++) {
-        			if(order[i] > m) {
-        				m = order[i];
-        			}
-        		}
-        		
-        		ArrayList<Integer> nextShots = new ArrayList<Integer>();
-        		for(int i=0;i<order.length;i++) {
-        			if(order[i] == m) {
-        				nextShots.add(i);
-        			}
-        		}
-        		int nextIndex = nextShots.get(r.nextInt(nextShots.size()));
-        		if(nextIndex == 0) {
-        			seek = seek1;
-        		}
-        		if(nextIndex == 1) {
-        			seek = seek2;
-        		}
-        		if(nextIndex == 2) {
-        			seek = seek3;
-        		}
-        		if(nextIndex == 3) {
-        			seek = seek4;
-        		}
-        		
-        		selection = 0;
-        		changer++;
-        		
-        	}
+    			
+    		}
+    		if(!answer.isHit) {
+    			
+    			if(option == 0 && selection == 0 && changer > 0) {
+    				option = 4;
+    			}
+    			answer.isHit = true;
+    			
+    			selection = 0;
+    			option++;
+    			numHits--;
+    			update(guess,answer);
+    			
+    			if(option > 3) {
+    				if(changer == 0) {
+    					originalHit = new cs(currentHit.column -1, currentHit.row - 1);
+    					
+        				changer = 1;
+        				
+    				}
+    				else if(changer == 1) {
+    					
+    					originalHit = new cs(currentHit.column +1, currentHit.row - 1);
+    					
+    					changer = 2;
+    					
+    				}
+    				else if(changer == 2) {
+    					
+    					originalHit = new cs(currentHit.column -1, currentHit.row + 1);
+    					
+    					changer = 3;
+    					
+    				}
+    				else if(changer == 3) {
+    					originalHit = new cs(currentHit.column +1, currentHit.row + 1);
+    					changer = 4;
+    				}
+    				
+    				
+    				
+    				else if(changer > 3) {
+    					int something = nextShot + 9 + infiniteCounter;
+    					if(something > 99) {
+    						something = nextShot - 9 + infiniteCounter;
+    					}
+    					int column = something % world.numColumn;
+    					int row = something / world.numRow;
+    					currentHit = new cs(column,row);
+    					changer = 0;
+    					originalHit = currentHit;
+    					
+    					infiniteCounter++;
+    					
+    					
+    					System.out.println("changer overextended");
+    				}
+    				option = 0;
+    				
+    				nextGuess = originalHit;
+    				
+    				
+    			}
+    			
+    			
+
+    			
+    			
+            		
+    		}
+    		
+
         	
         	
         }
